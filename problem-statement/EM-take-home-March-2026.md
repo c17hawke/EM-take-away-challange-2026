@@ -60,6 +60,8 @@ You must ingest **both** of the following sources. No substitutions are permitte
 |---|---|---|
 | Agentic RAG Orchestration | Google ADK | Preferred agent framework — any comparable framework (CrewAI, AutoGen, LlamaIndex, etc.) is acceptable; justify your choice in the README |
 | Data Retrieval Interface | MCP Server | Preferred retrieval interface — any clean REST or function-calling interface is acceptable if clearly documented |
+| Knowledge Graph Integration | RDF / SPARQL (e.g., RDFLib, Apache Jena, or similar) | Enrich retrieval by modelling regulatory entities and relationships as a knowledge graph; integrate SPARQL queries alongside semantic search |
+| NER over Regulatory Text | spaCy / Flair / fine-tuned transformer | Extract named entities such as roles, obligations, prohibited practices, and article references from ingested regulatory content |
 
 ---
 
@@ -377,7 +379,8 @@ A fully instrumented, containerized system with evaluation outputs and complete 
 - MCP Server as the retrieval interface running as a standalone Docker service
 - Minimal Streamlit or Gradio UI as an additional Docker service
 - Retrieval retry loop if confidence is low
-- NER extraction for roles, obligations, or prohibited practices
+- Knowledge Graph (RDF/SPARQL) integration — model regulatory entities and relationships as a graph and combine SPARQL-based lookup with semantic retrieval
+- NER over regulatory text — extract and surface roles, obligations, prohibited practices, and article references using a fine-tuned or domain-adapted NER model
 - Dev Container support
 - Basic CI workflow
 - Strong cross-document reasoning with explicit source attribution
