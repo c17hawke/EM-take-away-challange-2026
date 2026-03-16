@@ -1,0 +1,114 @@
+services:
+
+  # ── ChromaDB vector store ─────────────────────────────────────────────────
+  chroma:
+    image: chromadb/chroma:0.5.3
+    container_name: chroma
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      - ANONYMIZED_TELEMETRY=False
+      - IS_PERSISTENT=TRUE
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── One-shot ingestion runner ─────────────────────────────────────────────
+  ingestion:
+    build:
+      context: .
+      target: ingestion
+    container_name: ingestion
+    env_file: .env
+    environment:
+      - CHROMA_HOST=chroma
+      - CHROMA_PORT=8000
+    depends_on:
+      chroma:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data            # cache downloaded PDFs
+    restart: "no"                   # run once and exit
+
+  # ── MCP retrieval server ──────────────────────────────────────────────────
+  mcp-server:
+    build:
+      context: .
+      target: mcp-server
+    container_name: mcp-server
+    ports:
+      - "8001:8001"
+    env_file: .env
+    environment:
+      - CHROMA_HOST=chroma
+      - CHROMA_PORT=8000
+      - MCP_SERVER_HOST=0.0.0.0
+      - MCP_SERVER_PORT=8001
+    depends_on:
+      chroma:
+        condition: service_healthy
+      ingestion:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Google ADK agent API ──────────────────────────────────────────────────
+  agent-api:
+    build:
+      context: .
+      target: agent-api
+    container_name: agent-api
+    ports:
+      - "8002:8002"
+    env_file: .env
+    environment:
+      - CHROMA_HOST=chroma
+      - CHROMA_PORT=8000
+      - MCP_SERVER_HOST=mcp-server
+      - MCP_SERVER_PORT=8001
+      - AGENT_API_HOST=0.0.0.0
+      - AGENT_API_PORT=8002
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Optional Streamlit UI (bonus) ─────────────────────────────────────────
+  ui:
+    build:
+      context: .
+      target: base
+    container_name: ui
+    command: >
+      streamlit run ui/app.py
+      --server.address=0.0.0.0
+      --server.port=8501
+      --server.headless=true
+    ports:
+      - "8501:8501"
+    env_file: .env
+    environment:
+      - AGENT_API_HOST=agent-api
+      - AGENT_API_PORT=8002
+    depends_on:
+      agent-api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  chroma_data:
+    driver: local
