@@ -41,18 +41,25 @@ You must ingest **both** of the following sources. No substitutions are permitte
 
 ---
 
-## Mandatory Technology Stack
+## Technology Stack
 
-| Component | Required Tool(s) | Notes |
+### Required
+
+| Component | Tool(s) | Notes |
 |---|---|---|
-| Agentic RAG Orchestration | Google ADK | Primary agent framework |
 | Data Ingestion & Chunking | LangChain | Use it for document ingestion, chunking, and metadata enrichment |
 | Agentic Workflow Graph | LangGraph | Multi-step ingestion or retrieval workflow |
-| Data Retrieval Interface | MCP Server | Expose retrieval as an MCP-compatible tool/endpoint |
 | LLM Provider | Groq / Ollama / SambaNova Systems / OpenAI / Gemini | Your choice — justify it in the README |
 | Tracing & Observability | LangSmith / Arize Phoenix OSS / Weights & Biases / other open-source platform | Choose at least one and instrument the full pipeline |
 | Containerization | Docker + Docker Compose | Entire stack must run via `docker-compose up --build` |
 | Version Control | Public GitHub Repository | Submit the repo link |
+
+### Nice-to-Have
+
+| Component | Suggested Tool(s) | Notes |
+|---|---|---|
+| Agentic RAG Orchestration | Google ADK | Preferred agent framework — any comparable framework (CrewAI, AutoGen, LlamaIndex, etc.) is acceptable; justify your choice in the README |
+| Data Retrieval Interface | MCP Server | Preferred retrieval interface — any clean REST or function-calling interface is acceptable if clearly documented |
 
 ---
 
@@ -118,18 +125,19 @@ An `ingestion/` module containing the workflow, source-specific parsing logic, c
 
 Build the core agent that answers regulatory questions. The agent must reason transparently, retrieve grounded evidence through an MCP server, manage context intelligently, and produce a structured response.
 
-### Task 5 — MCP Server for Retrieval
+### Task 5 — Retrieval Interface *(MCP Server preferred, not required)*
 
-- Expose your retrieval layer as a standalone MCP-compatible server.
-- The MCP tool must accept a query string and return structured retrieval results.
+- Expose your retrieval layer as a standalone, tool-callable service.
+- MCP Server is the preferred approach and earns bonus credit — but any clean REST or function-calling interface is acceptable if clearly documented.
+- The interface must accept a query string and return structured retrieval results.
 - Each returned chunk must include:
   - `text`
   - `source`
   - `article_id` or `section`
   - `page_number` where applicable
   - `score`
-- The MCP server must run as its own Docker service.
-- Document the MCP interface clearly in the README.
+- If using MCP, run it as its own Docker service. Otherwise, ensure the retrieval service is independently deployable.
+- Document the retrieval interface clearly in the README.
 
 ### Task 6 — Context Engineering
 
@@ -158,34 +166,34 @@ Implement the following:
 - **Query decomposition**
   - For multi-part or cross-document questions, break the query into focused sub-queries, retrieve separately, and merge the context before synthesis.
 
-### Task 7 — Google ADK Agent with Minimal Callback Guardrails
+### Task 7 — Agentic Framework & Minimal Guardrails *(Google ADK preferred, not required)*
 
-- Build the primary agent using Google ADK.
-- Register the MCP retrieval server as a tool available to the agent.
+- Build the primary agent using an agentic framework of your choice. Google ADK is preferred and earns bonus credit — but any comparable framework (CrewAI, AutoGen, LlamaIndex Agents, LangGraph agent, etc.) is acceptable. Justify your choice in the README.
+- Register your retrieval service as a callable tool available to the agent.
 - The agent should:
   - decompose complex queries where needed
   - retrieve supporting evidence
   - synthesise a grounded answer
   - produce structured output
 
-Implement **minimal callback-based guardrails** in Google ADK at key points in the lifecycle:
+Implement **minimal guardrails** at key points in the agent lifecycle — irrespective of framework:
 
-- **Before-model callback**
+- **Pre-model / prompt validation**
   - Inspect the constructed prompt.
   - Detect prompt injection attempts or context overflows.
   - Block, sanitise, or adjust as needed.
 
-- **Before-tool callback**
-  - Validate the query being sent to the MCP retrieval tool.
+- **Pre-tool / query validation**
+  - Validate the query being sent to the retrieval tool.
   - Ensure the tool call is well-formed and relevant.
 
-- **After-model callback**
+- **Post-model / response inspection**
   - Inspect the raw model response.
   - Flag hallucination signals such as fabricated references, unsupported claims, or invalid article numbers.
 
-- All callback decisions must be logged.
+- All guardrail decisions must be logged.
 
-> These callbacks are intended to be lightweight, minimal guardrails — not a full safety system. Keep them focused and proportional.
+> These guardrails are intended to be lightweight and minimal — not a full safety system. Keep them focused and proportional.
 
 ### Task 8 — Required Chatbot Output Format
 
@@ -352,9 +360,9 @@ A fully instrumented, containerized system with evaluation outputs and complete 
 | Dimension | Weight | What Assessors Look For |
 |---|---:|---|
 | Ingestion Quality | 15% | Source handling, chunking quality, metadata richness, workflow clarity |
-| MCP Server Design | 10% | Clean tool interface, structured outputs, standalone service |
+| Retrieval Interface Design | 10% | Clean tool interface, structured outputs, standalone service (MCP earns full marks) |
 | Context Engineering | 15% | Context budgeting, reranking, memory strategy, query decomposition |
-| Google ADK Agent | 15% | Multi-step reasoning, tool use, required output structure |
+| Agentic Framework & Agent Design | 15% | Multi-step reasoning, tool use, required output structure (Google ADK earns full marks) |
 | Callback Guardrails | 10% | Placement, simplicity, usefulness, logging |
 | Citation & Audit Trail | 10% | Traceable claims, complete audit object |
 | Tracing & Observability | 10% | Named spans, key metrics, visible instrumentation |
@@ -365,6 +373,8 @@ A fully instrumented, containerized system with evaluation outputs and complete 
 
 ## Bonus Points
 
+- Google ADK as the agent framework with lifecycle callbacks (`before-model`, `before-tool`, `after-model`)
+- MCP Server as the retrieval interface running as a standalone Docker service
 - Minimal Streamlit or Gradio UI as an additional Docker service
 - Retrieval retry loop if confidence is low
 - NER extraction for roles, obligations, or prohibited practices
