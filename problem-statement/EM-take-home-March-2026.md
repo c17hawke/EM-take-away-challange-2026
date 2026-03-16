@@ -3,7 +3,7 @@
 ## Agentic RAG Chatbot for Regulatory Documents
 
 **Role:** AI Engineer – Legal & Regulatory LLM Solutions  
-**Time Budget:** 2–3 days (~12–18 hours of focused work)  
+**Time Budget:** Work at your own pace — use AI coding tools freely to accelerate implementation. This challenge is designed to take no more than 12–18 hours of focused work when AI coding tools are used effectively. There is no hard deadline, but other candidates are being evaluated concurrently, so the sooner you submit a strong solution, the better your position.
 **Submission:** Public GitHub repository — share the link with the hiring team  
 
 > **Important:** A submission without a README architecture/workflow diagram will be considered incomplete, regardless of code quality. The repository must be self-contained so reviewers can run `docker-compose up --build` after populating `.env` from `.env.example`.
@@ -65,7 +65,7 @@ You must ingest **both** of the following sources. No substitutions are permitte
 
 ---
 
-## Day 1 — Document Ingestion Pipeline
+## Phase 1 — Document Ingestion Pipeline
 
 Design and implement a source-agnostic ingestion pipeline that processes both the PDF and the website, producing richly annotated, semantically meaningful chunks ready for embedding and retrieval.
 
@@ -118,14 +118,14 @@ Design and implement a source-agnostic ingestion pipeline that processes both th
 - The workflow should support both source types through one coherent design, with branching only where necessary.
 - Include robust logging and error handling for each node.
 
-**Day 1 Deliverable:**  
+**Phase 1 Deliverable:**  
 An `ingestion/` module containing the workflow, source-specific parsing logic, chunking logic, and indexing pipeline.
 
 ---
 
-## Day 2 — Agentic RAG with Google ADK, MCP Server, and Context Engineering
+## Phase 2 — Agentic RAG, Context Engineering, and Guardrails
 
-Build the core agent that answers regulatory questions. The agent must reason transparently, retrieve grounded evidence through an MCP server, manage context intelligently, and produce a structured response.
+Build the core agent that answers regulatory questions. The agent must reason transparently, retrieve grounded evidence through a callable retrieval service, manage context intelligently, and produce a structured response.
 
 ### Task 5 — Retrieval Interface *(MCP Server preferred, not required)*
 
@@ -246,12 +246,12 @@ Alongside the user-facing output, every response must also generate a machine-re
 }
 ```
 
-**Day 2 Deliverable:**  
-An `agent/` module containing the Google ADK agent, MCP integration, context engineering logic, callback guardrails, output formatter, and audit trail generation.
+**Phase 2 Deliverable:**  
+An `agent/` module containing the agentic framework setup, retrieval service integration, context engineering logic, guardrails, output formatter, and audit trail generation.
 
 ---
 
-## Day 3 — Tracing, Evaluation, Containerization, and Documentation
+## Phase 3 — Tracing, Evaluation, Containerization, and Documentation
 
 ### Task 10 — Tracing & Observability
 
@@ -305,8 +305,8 @@ Suggested services:
 |---|---|
 | `vector-store` | Vector database |
 | `ingestion` | One-shot ingestion runner |
-| `mcp-server` | MCP retrieval endpoint |
-| `agent-api` | Google ADK agent exposed through an API |
+| `retrieval-api` | Retrieval endpoint (MCP server preferred, any interface accepted) |
+| `agent-api` | Agent exposed through an API (Google ADK preferred, any framework accepted) |
 | `tracer` *(optional)* | Self-hosted tracing backend if applicable |
 
 Requirements:
@@ -352,7 +352,13 @@ The README is a core deliverable and must include:
 
 - **Known Limitations & Future Work**
 
-**Day 3 Deliverable:**  
+- **Model Lifecycle & Experimentation Notes**
+  - Key design decisions made during development (model choice, chunking strategy, embedding selection, reranking approach)
+  - What alternatives were tried and discarded, and why
+  - How you would hand this system over to a platform or ops team for production monitoring
+  - Any versioning or experiment tracking approach used, even lightweight (e.g., logging config + results to a file)
+
+**Phase 3 Deliverable:**  
 A fully instrumented, containerized system with evaluation outputs and complete documentation.
 
 ---
